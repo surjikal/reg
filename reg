@@ -1,0 +1,98 @@
+#!/usr/bin/env node
+
+var Transform = require("stream").Transform;
+var util = require("util");
+
+
+util.inherits(SplitStream, Transform);
+
+function SplitStream(split) {
+    Transform.call(this, {objectMode:true});
+    this.buffer = '';
+    this.split = split;
+}
+
+SplitStream.prototype._transform = function(chunk, encoding, callback) {
+
+    var lines = (this.buffer + chunk.toString()).split(this.split);
+    this.buffer = lines.pop();
+
+    for (var line, lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        line = lines[lineIndex];
+        this.push(line);
+    }
+
+    callback();
+}
+
+SplitStream.prototype._flush = function (callback) {
+    if (this.buffer !== undefined) {
+        this.push(this.buffer);
+    }
+    callback();
+}
+
+
+util.inherits(ReplaceStream, Transform);
+
+function ReplaceStream(regex, replacement) {
+    this.regex = regex;
+    this.replacement = replacement;
+    console.log
+    Transform.call(this, {objectMode:true});
+}
+
+ReplaceStream.prototype._transform = function (chunk, encoding, callback) {
+    chunk = chunk.toString().replace(this.regex, this.replacement);
+    this.push(chunk);
+    callback();
+}
+
+
+util.inherits(JoinStream, Transform);
+
+function JoinStream(separator, options) {
+    this.separator = separator;
+    this.started = false;
+    this.options = options || {};
+    Transform.call(this, {objectMode:true});
+}
+
+JoinStream.prototype._transform = function (chunk, encoding, callback) {
+    if (this.started) {
+        this.push(this.separator);
+    }
+    this.push(chunk);
+    this.started = true;
+    callback();
+}
+
+JoinStream.prototype._flush = function (callback) {
+    if (this.options.end) {
+        this.push(this.separator);
+    }
+    callback();
+}
+
+
+var args = process.argv.slice(2);
+
+var flags, regex, replacement;
+
+if (args.length == 3) {
+    flags = args[0];
+    regex = args[1];
+    replacement = args[2];
+} else {
+    regex = args[0];
+    replacement = args[1];
+}
+
+
+var regex = new RegExp(regex, flags);
+
+process.stdin
+.pipe(new SplitStream(/\r?\n/))
+.pipe(new ReplaceStream(regex, replacement))
+.pipe(new JoinStream('\n'))
+.pipe(process.stdout)
