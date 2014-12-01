@@ -1,7 +1,9 @@
 reg
 ===
 
-Minimal sed-like tool for text replacements using JS regex syntax 
+Minimal sed-like tool for text replacements using JS regex syntax.
+
+Cause it's easier to reimplement sed that to remember the syntax.
 
 ## Usage
 
