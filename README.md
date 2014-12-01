@@ -3,7 +3,7 @@ reg
 
 Minimal sed-like tool for text replacements using JS regex syntax.
 
-Cause it's easier to reimplement sed that to remember the syntax.
+Cause it's easier to reimplement sed than to remember its regex syntax.
 
 ## Usage
 
